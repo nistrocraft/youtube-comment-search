@@ -1,0 +1,8 @@
+/* Fallback highlight style for marks created in light DOM.
+   Marks inside shadow roots carry inline styles set in content.js. */
+mark.ycs-mark {
+  background: rgba(250, 204, 21, 0.55);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 1px;
+}
