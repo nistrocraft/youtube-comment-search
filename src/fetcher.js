@@ -108,11 +108,23 @@
       avatar: cp.author?.avatarThumbnailUrl || "",
       text: cp.properties?.content?.content || "",
       published: cp.properties?.publishedTime || "",
-      likes: String(
-        cp.toolbar?.likeCountA11y ?? cp.toolbar?.likeCountText ?? ""
-      ),
+      // Prefer the short visual label; likeCountA11y is the verbose aria
+      // string ("285 marcações Gostei") — parse just the number out of it.
+      likes: parseLikes(cp.toolbar),
       isReply: !!isReply,
     };
+  }
+
+  function parseLikes(toolbar) {
+    // likeCountA11y is the only field reliably present ("285 marcações
+    // 'Gostei'") — pull the number out of it. likeCountText/likeCount are
+    // usually absent or 0 and must only be a last-resort fallback.
+    const m = String(toolbar?.likeCountA11y ?? "").match(/[\d.,]+/);
+    const likes = m
+      ? m[0]
+      : String(toolbar?.likeCountText ?? toolbar?.likeCount ?? "");
+    // YouTube shows no count at all for zero likes
+    return /^[0\s.,]*$/.test(likes) ? "" : likes;
   }
 
   function entityMap(resp) {

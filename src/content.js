@@ -22,8 +22,8 @@
 #${WIDGET_ID} .ycs-toggle-btn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;flex-shrink:0;border:none;border-radius:50%;background:var(--ycs-chip);cursor:pointer;padding:0;color:var(--ycs-fg)}
 #${WIDGET_ID} .ycs-toggle-btn:hover{background:var(--ycs-chip-hov)}
 #${WIDGET_ID} .ycs-toggle-btn svg{width:20px;height:20px;fill:currentColor}
-#${WIDGET_ID} input{width:0;opacity:0;border:none;background:transparent;outline:none;color:var(--ycs-fg);font-size:14px;padding:0;transition:width .18s ease,opacity .15s ease,padding .18s ease}
-#${WIDGET_ID}.ycs-open input{width:200px;opacity:1;padding:0 6px}
+#${WIDGET_ID} input{width:0;opacity:0;visibility:hidden;pointer-events:none;border:none;background:transparent;outline:none;color:var(--ycs-fg);font-size:14px;padding:0;transition:width .18s ease,opacity .15s ease,padding .18s ease}
+#${WIDGET_ID}.ycs-open input{width:200px;opacity:1;visibility:visible;pointer-events:auto;padding:0 6px}
 #${WIDGET_ID} input::placeholder{color:var(--ycs-sub)}
 #${WIDGET_ID} .ycs-count{display:none;font-size:12px;color:var(--ycs-sub);white-space:nowrap}
 #${WIDGET_ID}.ycs-open .ycs-count{display:inline}
@@ -31,7 +31,15 @@
 #${WIDGET_ID}.ycs-open .ycs-close{display:inline-flex}
 #${WIDGET_ID} .ycs-close:hover{color:var(--ycs-fg)}
 
-#${RESULTS_ID}{font-family:Roboto,Arial,sans-serif;font-size:14px;color:var(--ycs-fg,#0f0f0f);max-height:480px;overflow-y:auto;margin:8px 0 16px}
+#${RESULTS_ID}{font-family:Roboto,Arial,sans-serif;font-size:14px;color:var(--ycs-fg,#0f0f0f);margin:8px 0 16px}
+#${RESULTS_ID}:empty{display:none}
+/* On Shorts the widget is a flex item in the panel header: it grows into the
+   free space so the open pill can't overflow behind the filter/X icons, and
+   the collapsed magnifier stays hugging the right side. The results box fills
+   the whole panel content area and scrolls inside it. */
+#${WIDGET_ID}.ycs-shorts{flex:1;min-width:0;justify-content:flex-end}
+#${WIDGET_ID}.ycs-shorts.ycs-open input{flex:1;width:auto;min-width:0}
+#${RESULTS_ID}.ycs-shorts{flex:1;min-height:0;max-height:none;overflow-y:auto;margin:0}
 #${RESULTS_ID} .ycs-status{padding:12px 0;color:var(--ycs-sub,#606060);font-size:13px}
 #${RESULTS_ID} .ycs-comment{display:flex;gap:12px;padding:10px 0;border-top:1px solid var(--ycs-border,rgba(0,0,0,.1))}
 #${RESULTS_ID} .ycs-avatar{width:40px;height:40px;border-radius:50%;flex-shrink:0;background:var(--ycs-chip,rgba(0,0,0,.06))}
@@ -64,8 +72,14 @@
     };
   }
 
-  const vid = () => new URL(location.href).searchParams.get("v");
-  const isWatch = () => location.pathname === "/watch" && !!vid();
+  const vid = () => {
+    const u = new URL(location.href);
+    if (u.pathname === "/watch") return u.searchParams.get("v");
+    const m = u.pathname.match(/^\/shorts\/([\w-]{6,})/);
+    return m ? m[1] : null;
+  };
+  const isShorts = () => location.pathname.startsWith("/shorts/");
+  const isVideoPage = () => (location.pathname === "/watch" || isShorts()) && !!vid();
   const isDark = () => document.documentElement.hasAttribute("dark");
 
   function h(tag, cls, txt) {
@@ -178,19 +192,58 @@
     );
   }
 
+  /* Shorts comments live in an engagement panel (side drawer) whose header is
+     ytd-engagement-panel-title-header-renderer: title + filter icon + X. */
+  function findShortsPanel() {
+    const panels = deepAll(document, "ytd-engagement-panel-section-list-renderer");
+    return (
+      panels.find((p) =>
+        /comment/i.test(p.getAttribute("panel-identifier") || "")
+      ) ||
+      panels.find(
+        (p) =>
+          deepAll(p, "ytd-comment-thread-renderer, ytd-comments-header-renderer")
+            .length
+      ) ||
+      null
+    );
+  }
+
   function mountWidget() {
-    if (!isWatch() || (widgetEl && widgetEl.isConnected)) return;
-    const header = headerEl();
-    if (!header) return;
-    // Header internals may live in a shadow root — look inside it too.
-    const host =
-      header.querySelector("#title") ||
-      deepAll(header, "#title")[0] ||
-      deepAll(header, "#header")[0];
+    if (!isVideoPage() || (widgetEl && widgetEl.isConnected)) return;
+    let host;
+    let before = null;
+    if (isShorts()) {
+      const panel = findShortsPanel();
+      if (!panel) return;
+      const header = deepAll(
+        panel,
+        "ytd-engagement-panel-title-header-renderer"
+      )[0];
+      if (!header) return;
+      // Place the magnifier right before the close (X) button.
+      const closeBtn =
+        deepAll(header, "#close-button")[0] ||
+        deepAll(header, "yt-icon-button").at(-1);
+      if (closeBtn) {
+        host = closeBtn.parentElement;
+        before = closeBtn;
+      } else {
+        host = deepAll(header, "#actions")[0] || deepAll(header, "#title")[0];
+      }
+    } else {
+      const header = headerEl();
+      if (!header) return;
+      host =
+        header.querySelector("#title") ||
+        deepAll(header, "#title")[0] ||
+        deepAll(header, "#header")[0];
+    }
     if (!host) return;
     ensureStyles(host.getRootNode());
     widgetEl = buildWidget();
-    host.appendChild(widgetEl);
+    if (isShorts()) widgetEl.classList.add("ycs-shorts");
+    host.insertBefore(widgetEl, before);
   }
 
   function openWidget() {
@@ -220,32 +273,66 @@
     widgetEl?.classList.remove("ycs-open");
   }
 
-  /* Results box sits right under the comments header, above the comment list. */
+  /* Results box sits right under the comments header, above the comment list.
+     On Shorts it goes at the top of the panel's #content area instead. */
   function ensureResultsBox() {
     if (resultsEl && resultsEl.isConnected) return;
-    const header = headerEl();
-    if (!header) return;
     resultsEl = h("div");
     resultsEl.id = RESULTS_ID;
+    if (isShorts()) resultsEl.classList.add("ycs-shorts");
     applyTheme(resultsEl);
+    if (isShorts()) {
+      const panel = findShortsPanel();
+      const content = panel
+        ? deepAll(panel, "#content")[0] || deepAll(panel, "#contents")[0]
+        : null;
+      if (!content) {
+        resultsEl = null;
+        return;
+      }
+      ensureStyles(content.getRootNode());
+      content.prepend(resultsEl);
+      return;
+    }
+    const header = headerEl();
+    if (!header) {
+      resultsEl = null;
+      return;
+    }
     ensureStyles(header.getRootNode());
-    header.after ? header.after(resultsEl) : header.parentElement.insertBefore(resultsEl, header.nextSibling);
+    header.after(resultsEl);
   }
 
   /* Hide YouTube's own comment list while a filter is active so the page
      doesn't show two comment sections at once. Only the thread renderers and
      the continuation spinner are hidden — the header (which hosts our widget)
      and other elements stay visible. */
-  function setOriginalCommentsHidden(hide) {
-    const root =
+  function commentsRoot() {
+    return (
       document.querySelector("ytd-comments") ||
-      deepAll(document, "ytd-comments")[0];
+      deepAll(document, "ytd-comments")[0] ||
+      findShortsPanel()
+    );
+  }
+
+  function setOriginalCommentsHidden(hide) {
+    const root = commentsRoot();
     if (!root) return;
     for (const s of deepAll(
       root,
       "ytd-comment-thread-renderer, ytd-continuation-item-renderer"
     )) {
       s.style.display = hide ? "none" : "";
+    }
+    /* On Shorts, hide every sibling of the results box inside the panel
+       #content — whatever wrapper holds the threads keeps claiming flex
+       space even with its children hidden, leaving a gray void. The results
+       box then fills the panel alone. */
+    if (isShorts() && resultsEl?.parentElement) {
+      for (const child of resultsEl.parentElement.children) {
+        if (child !== resultsEl)
+          child.style.display = hide ? "none" : "";
+      }
     }
     // Keep hiding newly lazy-loaded threads while a query is active. Only
     // style attributes are touched, so this can't loop on itself.
@@ -466,7 +553,7 @@
   }
 
   function onNav() {
-    if (!isWatch()) {
+    if (!isVideoPage()) {
       teardown();
       return;
     }

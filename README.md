@@ -20,6 +20,8 @@ own internal API and lets you search all of it instantly.
 ## Features
 
 - Searches **all comments** on the video — replies included, no scrolling
+- Works on **regular videos and Shorts** — magnifier sits in the comments
+  header of each
 - **Instant** — comments are preloaded in the background when the video opens
 - **No API key** — uses YouTube's internal API with your existing session
 - **Accent-insensitive** — `pokemon` finds `Pokémon`, on both comment text
@@ -48,9 +50,10 @@ then load the cloned folder the same way.
 
 ## Usage
 
-Open any YouTube video, scroll to the comments section, and click the
-magnifier icon next to the comment count. Type to filter — matches are
-highlighted. Close the search to restore the normal comment list.
+Open any YouTube video or Short, scroll to the comments (or open the
+comments panel on a Short), and click the magnifier icon next to the
+comment count. Type to filter — matches are highlighted. Close the search
+to restore the normal comment list.
 
 ## How it works
 
@@ -77,8 +80,9 @@ Not currently — the manifest targets Chromium (Manifest V3). Porting would
 need small adjustments.
 
 **Does it search Shorts or live streams?**
-Shorts: no (different page structure). Live streams: only the post-stream
-comments, not live chat.
+Shorts: yes — open the comments panel on a Short and the magnifier sits in
+the panel header. Live streams: only the post-stream comments, not live
+chat.
 
 **Is my data safe?**
 Yes — nothing leaves your browser. All requests go to `youtube.com` itself

@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-11-27
+
+### Added
+
+- YouTube Shorts support — magnifier in the comments panel header, results
+  fill the whole panel
+
+### Fixed
+
+- Search results no longer capped at 480px on watch pages — the list grows
+  naturally and scrolls with the page
+- Empty results box no longer leaves a void pushing comments down on Shorts
+- Search pill overflowing behind the filter/close icons on Shorts
+- Collapsed input could still receive clicks and focus
+- Like counts no longer show the verbose accessibility text
+  ("285 likes") — just the number, and hidden when zero
+
 ## [1.0.0] - 2026-11-26
 
 ### Added
