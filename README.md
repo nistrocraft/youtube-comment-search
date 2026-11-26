@@ -8,8 +8,8 @@
   <img alt="Manifest V3" src="https://img.shields.io/badge/manifest-v3-brightgreen">
 </p>
 
-Search every comment on a YouTube video — including replies — without
-scrolling. A Manifest V3 extension for Chrome and Edge.
+Search every comment on a YouTube video or Short — including replies —
+without scrolling. A Manifest V3 extension for Chrome and Edge.
 
 ## Why not Ctrl+F?
 
@@ -20,8 +20,7 @@ own internal API and lets you search all of it instantly.
 ## Features
 
 - Searches **all comments** on the video — replies included, no scrolling
-- Works on **regular videos and Shorts** — magnifier sits in the comments
-  header of each
+- Works on **regular videos and Shorts**
 - **Instant** — comments are preloaded in the background when the video opens
 - **No API key** — uses YouTube's internal API with your existing session
 - **Accent-insensitive** — `pokemon` finds `Pokémon`, on both comment text
@@ -47,6 +46,10 @@ git clone https://github.com/nistrocraft/youtube-comment-search.git
 ```
 
 then load the cloned folder the same way.
+
+**Updating:** download the newest zip, extract it over the old folder (or to
+a new one — remove the old entry first), then click the reload icon on the
+extension's card in `chrome://extensions`.
 
 ## Usage
 

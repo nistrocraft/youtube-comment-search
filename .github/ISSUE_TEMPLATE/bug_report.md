@@ -20,7 +20,7 @@ What you expected to happen.
 
 **Environment**
 - Browser: [e.g. Chrome 131]
-- Extension version: [e.g. 1.0.0]
+- Extension version: [e.g. 1.1.0]
 - Video URL where it happens:
 
 **Screenshots / console errors**
