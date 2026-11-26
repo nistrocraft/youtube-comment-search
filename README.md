@@ -8,26 +8,24 @@
   <img alt="Manifest V3" src="https://img.shields.io/badge/manifest-v3-brightgreen">
 </p>
 
-A browser extension (Manifest V3) that adds instant comment search to YouTube
-watch pages — it searches **every comment** on the video, including replies,
-and filters with the speed of a native feature.
+Search every comment on a YouTube video — including replies — without
+scrolling. A Manifest V3 extension for Chrome and Edge.
+
+## Why not Ctrl+F?
+
+YouTube only loads comments as you scroll, so browser find-in-page misses most
+of them. This extension fetches the **entire** comment thread through YouTube's
+own internal API and lets you search all of it instantly.
 
 ## Features
 
-- **Compact magnifier** injected into the comments header ("N comments /
-  Sort by") that expands into an inline search field
-- **Background preloading** — all comments are fetched when the video page
-  opens, so the first search is already instant
-- **Full coverage** — top-level comments *and* replies, powered by YouTube's
-  own internal API (no API key needed)
-- **Accent-insensitive matching** — `historia` finds `história`, `ç`, `ã`, etc.,
+- Searches **all comments** on the video — replies included, no scrolling
+- **Instant** — comments are preloaded in the background when the video opens
+- **No API key** — uses YouTube's internal API with your existing session
+- **Accent-insensitive** — `historia` finds `história`, `c` finds `ç`, etc.,
   on both comment text and author names
-- **Match highlighting** in the results
-- **Native look & feel** — result cards mimic YouTube's comment layout,
-  follows light/dark theme automatically
-- **Hides the original list** while searching — no duplicated comment sections
-- Collapses on click-out (search stays applied); `Esc` or `×` clears everything
-- Match counter shows real totals even before comments finish rendering
+- **Match highlighting** in results that look like YouTube's native comments
+- **Light/dark theme** follows your YouTube setting automatically
 
 ## Install
 
@@ -46,42 +44,49 @@ and filters with the speed of a native feature.
 git clone https://github.com/nistrocraft/youtube-comment-search.git
 ```
 
-then load the cloned folder the same way as above.
+then load the cloned folder the same way.
 
 ## Usage
 
-1. Open any YouTube video and scroll to the comments section
-2. Click the magnifier icon next to the comment count / sort menu
-3. Type to filter — matching text is highlighted in yellow
-4. Click the magnifier again or click elsewhere to collapse (search stays on)
-5. `Esc` or `×` clears the filter and restores the normal comment list
+Open any YouTube video, scroll to the comments section, and click the
+magnifier icon next to the comment count. Type to filter — matches are
+highlighted. Close the search to restore the normal comment list.
 
 ## How it works
 
 - **`src/fetcher.js`** runs in the page's MAIN world and calls the internal
-  `youtubei/v1/next` endpoint with the user's own session. The comments-section
-  continuation token is generated deterministically from the video ID (the same
-  technique yt-dlp uses), so no lazy-scroll is required. Both comment formats
-  are supported: the legacy `commentRenderer` and the newer
-  `commentViewModel`/entity payloads.
-- **`src/content.js`** runs in the isolated world: it injects the widget,
-  receives the comment list via `postMessage`, filters it, and renders the
-  results. Theme colors come from YouTube's `html[dark]` attribute so they
-  work inside shadow roots too.
+  `youtubei/v1/next` endpoint. The comments-section continuation token is
+  generated deterministically from the video ID (the same technique yt-dlp
+  uses), so no lazy-scroll is required. Both comment formats are supported:
+  legacy `commentRenderer` and the newer `commentViewModel`/entity payloads.
+- **`src/content.js`** injects the widget, receives the comment list via
+  `postMessage`, filters it and renders the results.
 
-## Privacy
+## Limitations
 
-Nothing leaves your browser. All requests go to `youtube.com` itself using the
-session already present on the page. No analytics, no tracking, no remote
-servers.
+- Videos with comments disabled have nothing to search
+- Videos with hundreds of thousands of comments take a while to preload
+- Live chat messages and community posts are not covered
+- It relies on YouTube's *internal, undocumented* API — if YouTube changes the
+  response format, fetching may break until `src/fetcher.js` is updated
+
+## FAQ
+
+**Does it work on Firefox?**
+Not currently — the manifest targets Chromium (Manifest V3). Porting would
+need small adjustments.
+
+**Does it search Shorts or live streams?**
+Shorts: no (different page structure). Live streams: only the post-stream
+comments, not live chat.
+
+**Is my data safe?**
+Yes — nothing leaves your browser. All requests go to `youtube.com` itself
+using the session already on the page. No analytics, no tracking.
 
 ## Contributing
 
 Issues and pull requests are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
-
-Note: the extension relies on YouTube's *internal, undocumented* API. If
-YouTube changes its response format, `src/fetcher.js` may need updating —
-please open an issue if comment fetching breaks.
 
 ## License
 
