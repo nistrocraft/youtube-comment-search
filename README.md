@@ -22,8 +22,8 @@ own internal API and lets you search all of it instantly.
 - Searches **all comments** on the video — replies included, no scrolling
 - **Instant** — comments are preloaded in the background when the video opens
 - **No API key** — uses YouTube's internal API with your existing session
-- **Accent-insensitive** — `historia` finds `história`, `c` finds `ç`, etc.,
-  on both comment text and author names
+- **Accent-insensitive** — `cafe` finds `café`, `resume` finds `résumé`,
+  `pokemon` finds `Pokémon` — on both comment text and author names
 - **Match highlighting** in results that look like YouTube's native comments
 - **Light/dark theme** follows your YouTube setting automatically
 
